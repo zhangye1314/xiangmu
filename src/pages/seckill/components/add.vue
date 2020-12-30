@@ -1,14 +1,30 @@
 <template>
   <div>
     <el-dialog
-      :title="info.isadd?'添加商品':'编辑商品'"
+      :title="info.isadd ? '添加商品' : '编辑商品'"
       :visible.sync="info.isshow"
       @closed="cancel"
       @opened="opened"
     >
       <!-- 2.v-model绑定user -->
       <el-form :model="user">
-        <div>user:{{user}}</div>
+        <div>user:{{ user }}</div>
+
+        <el-form-item label="活动名称" label-width="100px">
+          <el-input v-model="user.goodsname"></el-input>
+        </el-form-item>
+        <el-form-item label="活动期限" label-width="100px">
+          <div class="block">
+            <el-date-picker
+              v-model="value1"
+              type="datetimerange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+            >
+            </el-date-picker>
+          </div>
+        </el-form-item>
 
         <el-form-item label="一级分类" label-width="100px">
           <el-select v-model="user.first_cateid" @change="changeFirstCateId">
@@ -32,61 +48,34 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="商品名称" label-width="100px">
-          <el-input v-model="user.goodsname"></el-input>
-        </el-form-item>
-        <el-form-item label="价格" label-width="100px">
-          <el-input v-model="user.price"></el-input>
-        </el-form-item>
-        <el-form-item label="市场价格" label-width="100px">
-          <el-input v-model="user.market_price"></el-input>
-        </el-form-item>
-        <el-form-item label="图片" label-width="100px">
-          <div class="my-upload">
-            <div class="add">+</div>
-            <img v-if="imgUrl" class="img" :src="imgUrl" alt />
-            <input v-if="info.isshow" type="file" class="ipt" @change="changeImg" />
-          </div>
-        </el-form-item>
-        <el-form-item label="商品规格" label-width="100px">
-          <el-select v-model="user.specsid" @change="changeSpecsId">
+
+        <el-form-item label="商品" label-width="100px">
+          <el-select v-model="user.second_cateid">
             <el-option label="--请选择--" value disabled></el-option>
             <el-option
-              v-for="item in specsList"
+              v-for="item in secondCateList"
               :key="item.id"
-              :label="item.specsname"
+              :label="item.catename"
               :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="规格属性" label-width="100px">
-          <el-select v-model="user.specsattr" multiple>
-            <el-option label="--请选择--" value disabled></el-option>
-            <el-option v-for="item in showSpecsAttr" :key="item" :label="item" :value="item"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="是否新品" label-width="100px">
-          <el-radio v-model="user.isnew" :label="1">是</el-radio>
-          <el-radio v-model="user.isnew" :label="2">否</el-radio>
-        </el-form-item>
-        <el-form-item label="是否热卖" label-width="100px">
-          <el-radio v-model="user.ishot" :label="1">是</el-radio>
-          <el-radio v-model="user.ishot" :label="2">否</el-radio>
-        </el-form-item>
 
         <el-form-item label="状态" label-width="100px">
-          <el-switch v-model="user.status" :active-value="1" :inactive-value="2"></el-switch>
-        </el-form-item>
-        <el-form-item label="商品描述" label-width="100px">
-          <!-- 富文本编辑器 -->
-          <div id="editor" v-if="info.isshow"></div>
+          <el-switch
+            v-model="user.status"
+            :active-value="1"
+            :inactive-value="2"
+          ></el-switch>
         </el-form-item>
       </el-form>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancel">取 消</el-button>
-        <el-button type="primary" @click="add" v-if="info.isadd">添 加</el-button>
-        <el-button type="primary" @click="update" v-else >修 改</el-button>
+        <el-button type="primary" @click="add" v-if="info.isadd"
+          >添 加</el-button
+        >
+        <el-button type="primary" @click="update" v-else>修 改</el-button>
       </div>
     </el-dialog>
   </div>
@@ -98,7 +87,7 @@ import {
   reqCatelist,
   reqgoodsAdd,
   reqgoodsDetail,
-  reqgoodsUpdate
+  reqgoodsUpdate,
 } from "../../../utils/http";
 import { successalert } from "../../../utils/alert";
 export default {
@@ -107,24 +96,19 @@ export default {
     return {
       // 1.初始化数据
       user: {
+        title: "",
+        begintime: "",
+        endtime: "",
         first_cateid: "",
         second_cateid: "",
-        goodsname: "",
-        price: "",
-        market_price: "",
-        img: null,
-        description: "",
-        specsid: "",
-        specsattr: [], //后端要的是数组字符串，所以在发请求之前，需要JSON.stringify()
-        isnew: 1,
-        ishot: 1,
-        status: 1
+        goodsid: "",
+        status: 1,
       },
       imgUrl: "",
       //4.二级分类的列表
       secondCateList: [],
       // 8.规格属性展示的所有选项的列表
-      showSpecsAttr: []
+      showSpecsAttr: [],
     };
   },
   computed: {
@@ -132,8 +116,8 @@ export default {
       //3.1 分类的list
       cateList: "cate/list",
       //7.1 规格的list
-      specsList: "specs/list"
-    })
+      specsList: "specs/list",
+    }),
   },
   methods: {
     ...mapActions({
@@ -142,7 +126,7 @@ export default {
       //7.2 规格列表的获取
       reqSpecsList: "specs/reqList",
       reqList: "goods/reqList",
-      reqTotal: "goods/reqTotal"
+      reqTotal: "goods/reqTotal",
     }),
     //5.修改了一级分类
     changeFirstCateId() {
@@ -153,7 +137,7 @@ export default {
     },
     //根据一级分类，计算出二级分类的list
     getSecondList() {
-      reqCatelist({ pid: this.user.first_cateid }).then(res => {
+      reqCatelist({ pid: this.user.first_cateid }).then((res) => {
         if (res.data.code == 200) {
           this.secondCateList = res.data.list;
         }
@@ -169,7 +153,7 @@ export default {
     },
     //获取规格属性的展示列表
     getShowSpecsAttr() {
-      let obj = this.specsList.find(item => item.id == this.user.specsid); 
+      let obj = this.specsList.find((item) => item.id == this.user.specsid);
       this.showSpecsAttr = obj ? obj.attrs : [];
     },
 
@@ -191,18 +175,13 @@ export default {
     //11.清空
     empty() {
       this.user = {
+        title: "",
+        begintime: "",
+        endtime: "",
         first_cateid: "",
         second_cateid: "",
-        goodsname: "",
-        price: "",
-        market_price: "",
-        img: null,
-        description: "",
-        specsid: "",
-        specsattr: [], 
-        isnew: 1,
-        ishot: 1,
-        status: 1
+        goodsid: "",
+        status: 1,
       };
       this.imgUrl = "";
       //二级分类的列表
@@ -213,15 +192,15 @@ export default {
     //10.点了添加
     add() {
       //取出富文本编辑器的内容，赋值给user
-      this.user.description=this.editor.txt.html() 
+      this.user.description = this.editor.txt.html();
 
       let data = {
         ...this.user,
-        specsattr: JSON.stringify(this.user.specsattr)
+        specsattr: JSON.stringify(this.user.specsattr),
       };
 
       //发请求
-      reqgoodsAdd(data).then(res => {
+      reqgoodsAdd(data).then((res) => {
         if (res.data.code == 200) {
           //1.弹框消失
           this.cancel();
@@ -237,7 +216,7 @@ export default {
     },
     //获取一条数据
     getOne(id) {
-      reqgoodsDetail({ id: id }).then(res => {
+      reqgoodsDetail({ id: id }).then((res) => {
         if (res.data.code == 200) {
           this.user = res.data.list;
           //重新获取二级分类的list
@@ -250,24 +229,17 @@ export default {
           this.user.specsattr = JSON.parse(this.user.specsattr);
           //补id
           this.user.id = id;
-          //将user.desctiption赋值给富文本编辑器
-          if(this.editor){
-            this.editor.txt.html(this.user.description)
-          }
         }
       });
     },
     //修改
     update() {
-       //取出富文本编辑器的内容，赋值给user
-      this.user.description=this.editor.txt.html() 
       let data = {
         ...this.user,
-        specsattr: JSON.stringify(this.user.specsattr)
+        specsattr: JSON.stringify(this.user.specsattr),
       };
 
-     
-      reqgoodsUpdate(data).then(res => {
+      reqgoodsUpdate(data).then((res) => {
         if (res.data.code == 200) {
           //1.弹框消失
           this.cancel();
@@ -280,14 +252,6 @@ export default {
         }
       });
     },
-    //创建富文本编辑器
-    opened() {
-      //创建编辑器
-      this.editor = new E("#editor");
-      this.editor.create();
-      //赋值
-      this.editor.txt.html(this.user.description)
-    }
   },
   mounted() {
     //3.3如果没有请过分类数据，就发一下请求
@@ -297,40 +261,9 @@ export default {
 
     //7.3 请求规格list
     this.reqSpecsList(true);
-  }
+  },
 };
 </script>
 
-<style scoped>
-/* 原生js的样式 */
-.my-upload {
-  width: 100px;
-  height: 100px;
-  border: 1px dashed #999;
-  position: relative;
-}
-.my-upload .add {
-  width: 100px;
-  height: 100px;
-  text-align: center;
-  line-height: 100px;
-  font-size: 30px;
-  color: #666;
-}
-.my-upload .ipt {
-  width: 100px;
-  height: 100px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-.my-upload .img {
-  width: 100px;
-  height: 100px;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
+<style>
 </style>

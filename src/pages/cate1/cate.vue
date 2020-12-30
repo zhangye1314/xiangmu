@@ -1,32 +1,31 @@
 <template>
   <div>
-    <!-- 添加按钮 -->
-    <el-button type="primary" @click="willAdd">添加</el-button>
+   <!-- 添加按钮 -->
+    <el-button type="primary"  @click="willAdd">添加</el-button>
     <!-- 数据展示表格 -->
-    <v-list :list="list" @init="init" @edit="edit($event)"></v-list>
+       <v-list :list="list" @init="init" @edit="edit($event)"></v-list>
     <!-- 添加弹框 -->
     <v-add :info="info" @init="init" :list="list" ref="add"></v-add>
   </div>
 </template>
 
 <script>
-import vList from "./components/list";
-import vAdd from "./components/add";
-import { reqBannerlist } from "../../utils/http";
+import vList from "./components/list"
+import vAdd from "./components/add"
+import { reqMenulist, reqRolelist,reqManagelist,reqCatelist } from "../../utils/http";
 export default {
-  components: {
+  components:{
     vList,
-    vAdd,
-  },
-  data() {
+    vAdd
+  }, data() {
     return {
       //2.弹框状态
       info: {
         isshow: false,
-        isadd: true,
+        isadd:true
       },
       //20.初始化列表数据
-      list: [],
+      list: []
     };
   },
   methods: {
@@ -34,33 +33,34 @@ export default {
     willAdd() {
       this.info.isshow = true;
       //添加
-      this.info.isadd = true;
+      this.info.isadd=true
     },
     //获取列表
-    init() {
-      reqBannerlist({ istree: true }).then((res) => {
+     init() {
+      reqCatelist({istree:true}).then(res => {
         if (res.data.code == 200) {
           this.list = res.data.list;
-          console.log(this.list);
+           console.log(this.list)
         }
       });
     },
     //36.编辑触发
-    edit(id) {
+    edit(id){
       //弹框出现
-      this.info.isshow = true;
+      this.info.isshow=true;
 
-      this.info.isadd = false;
+      this.info.isadd=false
 
-      this.$refs.add.getOne(id);
-    },
+      this.$refs.add.getOne(id)
+    }
   },
   mounted() {
     //21.获取list
     this.init();
-  },
-};
+  }
+}
 </script>
 
 <style>
+
 </style>

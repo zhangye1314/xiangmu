@@ -1,14 +1,28 @@
 <template>
   <div>
     <el-dialog
-      :title="info.isadd ? '轮播图添加' : '编辑轮播图'"
+      :title="info.isadd ? '商品分类添加' : '编辑商品分类'"
       :visible.sync="info.isshow"
       @closed="cancel"
     >
       <el-form :model="user">
-        <el-form-item label="标题" label-width="100px">
-          <el-input v-model="user.title" autocomplete="off"></el-input>
+        <el-form-item label="上级分类" label-width="100px">
+          <el-select v-model="user.pid">
+            <el-option label="--请选择--" value="" disabled></el-option>
+            <el-option label="顶级分类" :value="0"></el-option>
+            <!-- 5.遍历数据 -->
+            <el-option
+              v-for="item in list"
+              :key="item.id"
+              :label="item.catename"
+              :value="item.id"
+            ></el-option>
+          </el-select>
         </el-form-item>
+        <el-form-item label="分类名称" label-width="100px">
+          <el-input v-model="user.catename" autocomplete="off"></el-input>
+        </el-form-item>
+
         <el-upload
           action="#"
           list-type="picture-card"
@@ -61,13 +75,11 @@
 
 <script>
 import {
-  reqRoleAdd,
-  reqRoleDetail,
-  reqRoleUpdate,
   reqRolelist,
-  reqBannerAdd,
-  reqBannerDetail,
-  reqBannerUpdate,
+  reqCateAdd,
+  reqCateDetail,
+  reqCateUpdate,
+  reqCatelist,
 } from "../../../utils/http";
 import { successalert } from "../../../utils/alert";
 export default {
@@ -77,7 +89,8 @@ export default {
       roleList: [],
       //3.初始化user
       user: {
-        title: "",
+        pid: "",
+        catename: "",
         img: "",
         status: 1,
       },
@@ -109,17 +122,18 @@ export default {
     },
     empty() {
       this.user = {
-        title: "",
+        pid: "",
+        catename: "",
         img: "",
         status: 1,
       };
-      this.dialogImageUrl = "";
     },
     // 添加
     add() {
-      console.log(this.user);
-      reqBannerAdd(this.user).then((res) => {
+      reqCateAdd(this.user).then((res) => {
+        //  console.log(res)
         if ((res.data.code = 200)) {
+          // console.log(this.user)
           successalert(res.data.msg);
           this.cancel();
           this.empty();
@@ -137,18 +151,18 @@ export default {
     },
     //10.获取详情
     getOne(id) {
-      reqBannerDetail({ id: id }).then((res) => {
+      reqCateDetail({ id: id }).then((res) => {
+        console.log(res);
         if (res.data.code == 200) {
           this.user = res.data.list;
-         this.user.id = id;
-          //处理图片
+          this.user.id = id;
           this.imgUrl = this.$pre + this.user.img;
         }
       });
     },
     // 修改
     update() {
-      reqBannerUpdate(this.user).then((res) => {
+      reqCateUpdate(this.user).then((res) => {
         if (res.data.code == 200) {
           //弹成功
           successalert(res.data.msg);
