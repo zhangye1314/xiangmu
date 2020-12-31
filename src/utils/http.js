@@ -443,6 +443,7 @@ export let reqseckillAdd = (user) => {
 
 //详情
 export let reqseckilllist = () => {
+    
     return axios({
         url: baseUrl + "/api/secklist",
     })

@@ -22,12 +22,12 @@ export default {
   },
   computed: {
     ...mapGetters({
-      list: "cate/list"
+      list: "seckill/list"
     })
   },
   methods: {
     ...mapActions({
-      reqList: "cate/reqList"
+      reqList: "seckill/reqList"
     }),
     //点了添加
     willAdd(){

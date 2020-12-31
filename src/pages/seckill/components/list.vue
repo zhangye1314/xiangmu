@@ -7,7 +7,7 @@
       border
       :tree-props="{children: 'children'}"
     >
-      <el-table-column prop="id" label="活动名称" sortable width="180"></el-table-column>
+      <el-table-column prop="title" label="活动名称" sortable width="180"></el-table-column>
       <el-table-column label="状态">
         <template slot-scope="scope">
             <el-button type="success" round v-if="scope.row.status===1">启用</el-button>
@@ -25,7 +25,7 @@
 </template>
   <script>
 import { mapActions, mapGetters } from "vuex";
-import { reqspecsDel } from "../../../utils/http";
+import { reqseckillDel} from "../../../utils/http";
 import { successalert } from "../../../utils/alert";
 export default {
   data() {
@@ -33,21 +33,19 @@ export default {
   },
   computed: {
     ...mapGetters({
-      list: "specs/list",
+      list: "seckill/list",
     })
   },
   methods: {
     ...mapActions({
-      reqList: "specs/reqList",
+      reqList: "seckill/reqList",
     }),
     //删除
     del(id) {
-      reqspecsDel({ id: id }).then(res => {
+      reqseckillDel({ id: id }).then(res => {
         if (res.data.code == 200) {
           successalert(res.data.msg);
           this.reqList();
-          //总数
-          this.reqTotal()
         }
       });
     },
@@ -59,8 +57,6 @@ export default {
   mounted() {
     //获取列表
     this.reqList();
-    //获取总数
-    this.reqTotal()
   }
 };
 </script>

@@ -1,17 +1,17 @@
 <template>
   <div>
     <el-dialog
-      :title="info.isadd ? '添加商品' : '编辑商品'"
+      :title="info.isadd ? '添加秒杀活动' : '编辑秒杀活动'"
       :visible.sync="info.isshow"
       @closed="cancel"
-      @opened="opened"
     >
       <!-- 2.v-model绑定user -->
       <el-form :model="user">
         <div>user:{{ user }}</div>
+        <div>{{ value1 }}</div>
 
         <el-form-item label="活动名称" label-width="100px">
-          <el-input v-model="user.goodsname"></el-input>
+          <el-input v-model="user.title"></el-input>
         </el-form-item>
         <el-form-item label="活动期限" label-width="100px">
           <div class="block">
@@ -19,8 +19,6 @@
               v-model="value1"
               type="datetimerange"
               range-separator="至"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
             >
             </el-date-picker>
           </div>
@@ -37,8 +35,12 @@
             ></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="二级分类" label-width="100px">
-          <el-select v-model="user.second_cateid">
+        <el-form-item
+          label="二级分类"
+          label-width="100px"
+          
+        >
+          <el-select v-model="user.second_cateid" @change="changeSecondCateid">
             <el-option label="--请选择--" value disabled></el-option>
             <el-option
               v-for="item in secondCateList"
@@ -50,12 +52,12 @@
         </el-form-item>
 
         <el-form-item label="商品" label-width="100px">
-          <el-select v-model="user.second_cateid">
+          <el-select v-model="user.goodsid">
             <el-option label="--请选择--" value disabled></el-option>
             <el-option
-              v-for="item in secondCateList"
+              v-for="item in secomdgoodsList"
               :key="item.id"
-              :label="item.catename"
+              :label="item.goodsname"
               :value="item.id"
             ></el-option>
           </el-select>
@@ -85,15 +87,48 @@ import E from "wangeditor";
 import { mapActions, mapGetters } from "vuex";
 import {
   reqCatelist,
-  reqgoodsAdd,
-  reqgoodsDetail,
-  reqgoodsUpdate,
+  reqseckillAdd,
+  reqseckillDetail,
+  reqseckillUpdate,
+  reqgoodslist,
 } from "../../../utils/http";
 import { successalert } from "../../../utils/alert";
 export default {
   props: ["info"],
   data() {
     return {
+      // 时间戳
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        },
+        shortcuts: [
+          {
+            text: "今天",
+            onClick(picker) {
+              picker.$emit("pick", new Date());
+            },
+          },
+          {
+            text: "昨天",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24);
+              picker.$emit("pick", date);
+            },
+          },
+          {
+            text: "一周前",
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", date);
+            },
+          },
+        ],
+      },
+      value1: [],
+
       // 1.初始化数据
       user: {
         title: "",
@@ -104,9 +139,11 @@ export default {
         goodsid: "",
         status: 1,
       },
-      imgUrl: "",
       //4.二级分类的列表
       secondCateList: [],
+
+      secomdgoodsList: [],
+
       // 8.规格属性展示的所有选项的列表
       showSpecsAttr: [],
     };
@@ -117,6 +154,8 @@ export default {
       cateList: "cate/list",
       //7.1 规格的list
       specsList: "specs/list",
+      // 商品管理的list
+      goodList: "good/list",
     }),
   },
   methods: {
@@ -125,8 +164,7 @@ export default {
       reqCateList: "cate/reqList",
       //7.2 规格列表的获取
       reqSpecsList: "specs/reqList",
-      reqList: "goods/reqList",
-      reqTotal: "goods/reqTotal",
+      reqList: "seckill/reqList",
     }),
     //5.修改了一级分类
     changeFirstCateId() {
@@ -137,26 +175,27 @@ export default {
     },
     //根据一级分类，计算出二级分类的list
     getSecondList() {
-      reqCatelist({ pid: this.user.first_cateid }).then((res) => {
-        if (res.data.code == 200) {
+      reqCatelist({
+        pid: this.user.first_cateid,
+      }).then((res) => {
+        if ((res.data.code = 200)) {
           this.secondCateList = res.data.list;
         }
       });
     },
-    //9.规格变了
-    changeSpecsId() {
-      //将之前的规格属性清空
-      this.user.specsattr = [];
-
-      //计算出规格属性展示的所有选项的列表
-      this.getShowSpecsAttr();
+    //根据一级分类，二级分类获取商品
+    changeSecondCateid() {
+      console.log(1111)
+      reqgoodslist({
+        fid: this.user.first_cateid,
+        sid: this.user.second_cateid,
+      }).then((res) => {
+        if ((res.data.code == 200)) {
+          console.log(res.data.list)
+          this.secomdgoodsList = res.data.list;
+        }
+      });
     },
-    //获取规格属性的展示列表
-    getShowSpecsAttr() {
-      let obj = this.specsList.find((item) => item.id == this.user.specsid);
-      this.showSpecsAttr = obj ? obj.attrs : [];
-    },
-
     //取消
     cancel() {
       if (!this.info.isadd) {
@@ -164,14 +203,6 @@ export default {
       }
       this.info.isshow = false;
     },
-    //6.上传文件
-    changeImg(e) {
-      let file = e.target.files[0];
-      //判断 略
-      this.imgUrl = URL.createObjectURL(file);
-      this.user.img = file;
-    },
-
     //11.清空
     empty() {
       this.user = {
@@ -183,24 +214,21 @@ export default {
         goodsid: "",
         status: 1,
       };
-      this.imgUrl = "";
       //二级分类的列表
       this.secondCateList = [];
+      // 三级分类的列表
+      this.secomdgoodsList = [];
       // 规格属性展示的所有选项的列表
       this.showSpecsAttr = [];
+      this.value1 = [];
     },
     //10.点了添加
     add() {
-      //取出富文本编辑器的内容，赋值给user
-      this.user.description = this.editor.txt.html();
-
-      let data = {
-        ...this.user,
-        specsattr: JSON.stringify(this.user.specsattr),
-      };
+      this.user.begintime = this.value1[0].getTime();
+      this.user.endtime = this.value1[1].getTime();
 
       //发请求
-      reqgoodsAdd(data).then((res) => {
+      reqseckillAdd(this.user).then((res) => {
         if (res.data.code == 200) {
           //1.弹框消失
           this.cancel();
@@ -210,23 +238,20 @@ export default {
           successalert(res.data.msg);
           //4.刷新list
           this.reqList();
-          this.reqTotal();
+          // this.reqTotal();
         }
       });
     },
     //获取一条数据
     getOne(id) {
-      reqgoodsDetail({ id: id }).then((res) => {
+      reqseckillDetail({ id: id }).then((res) => {
         if (res.data.code == 200) {
           this.user = res.data.list;
+          this.$set(this.value1, 0, Number(this.user.begintime));
+          this.$set(this.value1, 1, Number(this.user.endtime));
+          console.log(this.value1);
           //重新获取二级分类的list
           this.getSecondList();
-          //图片
-          this.imgUrl = this.$pre + this.user.img;
-          //规格属性展示list
-          this.getShowSpecsAttr();
-          //规格属性选中的list
-          this.user.specsattr = JSON.parse(this.user.specsattr);
           //补id
           this.user.id = id;
         }
@@ -239,7 +264,7 @@ export default {
         specsattr: JSON.stringify(this.user.specsattr),
       };
 
-      reqgoodsUpdate(data).then((res) => {
+      reqseckillUpdate(data).then((res) => {
         if (res.data.code == 200) {
           //1.弹框消失
           this.cancel();
@@ -258,7 +283,6 @@ export default {
     if (this.cateList.length === 0) {
       this.reqCateList();
     }
-
     //7.3 请求规格list
     this.reqSpecsList(true);
   },

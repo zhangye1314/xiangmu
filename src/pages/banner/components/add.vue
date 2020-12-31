@@ -95,6 +95,20 @@ export default {
     });
   },
   methods: {
+    // 验证
+     checkProps() {
+      return new Promise((resolve) => {
+        if (this.user.title === "") {
+          erroralert("标题不能为空");
+          return;
+        }
+         if (this.file.url === "") {
+          erroralert("图片不能为空");
+          return;
+        }
+        resolve();
+      });
+    },
     //点了取消
     cancel() {
       //编辑清空数据
@@ -117,7 +131,6 @@ export default {
     },
     // 添加
     add() {
-      console.log(this.user);
       reqBannerAdd(this.user).then((res) => {
         if ((res.data.code = 200)) {
           successalert(res.data.msg);

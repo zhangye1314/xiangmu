@@ -19,8 +19,7 @@ let getters={
 let actions={
     // 3.4 处理list的逻辑
     reqList(context){
-        //发请求 成功之后 修改
-       
+        //发请求 成功之后 修改       
         reqCatelist({istree:true}).then(res=>{
             if(res.data.code==200){
                 context.commit("changeList",res.data.list)

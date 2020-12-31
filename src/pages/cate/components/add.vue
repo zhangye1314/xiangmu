@@ -101,7 +101,6 @@ export default {
       }
 
       //后缀名
-      //   let extname=file.name.slice(file.name.lastIndexOf("."));
       let extname = path.extname(file.name);
       let arr = [".png", ".gif", ".jpg", ".jpeg"];
       if (!arr.some((item) => item === extname)) {
@@ -145,7 +144,8 @@ export default {
     },
     //4.添加
     add() {
-      reqCateAdd(this.user).then((res) => {
+      this.checkprops().then(()=>{
+        reqCateAdd(this.user).then((res) => {
         if (res.data.code == 200) {
           // 封装了成功弹框
           successalert(res.data.msg);
@@ -157,6 +157,7 @@ export default {
           this.reqList();
         }
       });
+      })
     },
 
     //10.获取详情
@@ -173,7 +174,8 @@ export default {
     },
     //40修改
     update() {
-      reqCateUpdate(this.user).then((res) => {
+     this.checkprops().then(()=>{
+        reqCateUpdate(this.user).then((res) => {
         if (res.data.code == 200) {
           //弹成功
           successalert(res.data.msg);
@@ -185,7 +187,18 @@ export default {
           this.reqList();
         }
       });
+     })
     },
+
+  checkprops(){
+    return new Promise((resolve)=>{
+      if(this.user.catename===""){
+        erroralert("分类名称不能为空");
+        return;
+      }
+      resolve()
+    })
+  }
   },
 };
 </script>
