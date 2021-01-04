@@ -1,8 +1,8 @@
-import { data } from "autoprefixer"
 import axios from "axios"
-import url from "postcss-url"
 import qs from "qs"
 import Vue from "vue"
+import store from "../store"
+import router from "../router"
 import { erroralert } from "./alert"
 
 // 开发环境
@@ -13,6 +13,35 @@ Vue.prototype.$pre = "http://localhost:3000"
 // let baseUrl=""
 // Vue.prototype.$pre=""
 
+
+// 设置请求头
+axios.interceptors.request.use(config => {
+    if (config.url !== baseUrl + "/api/userlogin") {
+        config.headers.authorization = store.state.userInfo.token
+    }
+    return config
+})
+
+// 响应拦截
+axios.interceptors.response.use(res => {
+    // 统一处理失败
+    if (res.data.code !== 200) {
+        erroralert(res.data.msg)
+    }
+    //统一处理list是null的情况
+    if (!res.data.list) {
+        res.data.list = []
+    }
+    //掉线处理
+    if (res.data.msg === "登录已过期或访问权限受限") {
+        //清除用户登录的信息 userInfo
+        store.dispatch("changeUser", {})
+        //跳到登录页面
+        router.push("/login")
+    }
+
+    return res
+})
 
 // post 带有文件，参数转换
 function dataToFormData(user) {
@@ -30,6 +59,18 @@ axios.interceptors.response.use(res => {
     console.groupEnd()
     return res
 })
+
+
+// 登录页面
+export let reqLogin = (user) => {
+    return axios({
+        url: baseUrl + "/api/userlogin",
+        method: "post",
+        data: qs.stringify(user)
+    })
+}
+
+
 
 // 添加
 export const reqMenuAdd = (user) => {
@@ -443,7 +484,7 @@ export let reqseckillAdd = (user) => {
 
 //详情
 export let reqseckilllist = () => {
-    
+
     return axios({
         url: baseUrl + "/api/secklist",
     })

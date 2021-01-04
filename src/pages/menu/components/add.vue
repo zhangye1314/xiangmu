@@ -108,6 +108,10 @@ export default {
         status: 1,
       };
     },
+    // 验证
+    checkProps(){
+      
+    },
     add() {
       reqMenuAdd(this.user).then((res) => {
         if (res.data.code == 200) {

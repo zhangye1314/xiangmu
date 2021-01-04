@@ -47,7 +47,9 @@
         <el-main>
           <!-- 面包屑 -->
           <el-breadcrumb separator="/" v-if="$route.name">
-            <el-breadcrumb-item :to="{ path: '/index' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item :to="{ path: '/index' }"
+              >首页</el-breadcrumb-item
+            >
             <el-breadcrumb-item>{{ $route.name }}</el-breadcrumb-item>
           </el-breadcrumb>
           <!-- 二级路由出口 -->
@@ -59,7 +61,24 @@
 </template>
 
 <script>
-export default {};
+import { mapGetters, mapActions } from "vuex";
+export default {
+  computed: {
+    ...mapGetters({
+      userInfo: "userInfo",
+    }),
+  },
+  methods: {
+    ...mapActions({
+      changeUser: "changeUser",
+    }),
+    // 退出登录
+    logout() {
+      this.changeUser({});
+      this.$router.replace("/login");
+    },
+  },
+};
 </script>
 
 <style scoped>
